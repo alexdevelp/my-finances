@@ -1,26 +1,75 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { 
+  useState,
+  useEffect,
+} from 'react';
+import * as C from './App.styles';
+import { items } from './data/items';
+import { typeItem } from './types/typesItem';
+import { categories } from './data/categories';
+import { TableArea} from './components/tableArea';
+import { typeCategory } from './types/typeCategory';
+import { filterListByMonth, getCurrentMonth } from './helpers/dateFIlter';
+import { InfoArea } from './components/infoArea';
+import { InputArea } from './components/inputArea';
+const App = ()=> {
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [ list, setList ] = useState(items);
+  const [ income, setIncome ] = useState(0);
+  const [ expense, setExpense ] = useState(0);
+  const [ filteredList, setFilteredList ] = useState<typeItem[]>([]);
+  const [ currentMonth, setCurrentMonth ] = useState(getCurrentMonth());
+
+  const handleMonthChange = (newMonth: string) => {
+    setCurrentMonth(newMonth);
+  }
+
+  const handleAddItem = (item: typeItem) => {
+    let newList = [...filteredList];
+    newList.push(item);
+    setFilteredList(newList);
+  }
+
+
+  useEffect(()=>{
+    setFilteredList(filterListByMonth(list, currentMonth));
+  }, [list, currentMonth]);
+
+  useEffect(()=>{
+    let incomeCount = 0;
+    let expenseCount = 0;
+
+    for(let i in filteredList){
+      if(categories[filteredList[i].category].expense){
+        expenseCount += filteredList[i].value;
+      }else{
+        incomeCount += filteredList[i].value;
+      }
+    }
+
+    setIncome(incomeCount);
+    setExpense(expenseCount);
+    
+  }, [filteredList])
+
+  return(
+    <C.Container>
+      <C.Header>
+        <C.HeaderTitle>Sistema Financeiro</C.HeaderTitle>
+      </C.Header>
+      <C.Body>
+
+
+        <InfoArea 
+          onMonthChange={handleMonthChange}
+          currentMonth={currentMonth}
+          income={income}
+          expense={expense}
+        />
+        <InputArea onAdd={handleAddItem} />
+        <TableArea list={filteredList} />
+      </C.Body>
+    </C.Container>
+  )
 }
 
 export default App;
